@@ -1,9 +1,9 @@
 ### Rime LoRaWAN Data C# SDK API 参考文档
 
-项目添加以下程序集及其依赖项引用:
-- Rimelink.Data.dll
-- M2Mqtt.Net.dll
-- Newtonsoft.Json.dll
+在使用该 SDK 的项目添加以下程序集及其依赖项引用:
+- Rimelink.Data.dll 即本SDK编译之后的程序集
+- M2Mqtt.Net.dll  https://github.com/eclipse/paho.mqtt.m2mqtt
+- Newtonsoft.Json.dll  https://github.com/JamesNK/Newtonsoft.Json
 
 其它说明，要求 .NetFramework 4.5 及以上。
 
