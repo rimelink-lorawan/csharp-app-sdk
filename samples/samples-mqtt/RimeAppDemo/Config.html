@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>配置</title>  
+	<script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+	<!--[if lt IE 9]>
+	<script src="json2.js"></script>
+	<![endif]-->
+    <style>
+	    body { padding:0; margin:0; } 
+		#itemrows tr td { text-align:center; }
+		.i { width:80px; }
+    </style>
+    
+<script type="text/javascript">
+$(function(){
+    initConfig();
+});
+
+function initConfig(){ 
+	var c = window.external.GetConfig();
+	var o = JSON.parse(c);
+	$.each(o["数据结构"], function(i, n){
+	    if(i == 0) fillitem($("#itemrows tr:first"), n);
+		else fillitem(additem(), n); 
+	});
+}
+
+function fillitem(row, values){   
+    row.find("[name=ilen]").val(values["长度"]);
+	row.find("[name=ilabel]").val(values["标签"]);
+	row.find("[name=itype] option[value='" + values["类型"] + "']").attr("selected", "true");
+	row.find("[name=ibegin] option[value='" + values["大小端"] + "']").attr("selected", "true");
+	row.find("[name=iunit]").val(values["单位"]);
+}
+
+function additem(){
+    // 取得第一行（模板行）
+	var row = $("#itemrows tr:first").prop("outerHTML");  
+	// 添加到后边
+	$("#itemrows").append(row);
+	newrow = $("#itemrows tr:last");
+	newrow.find("td:last").append('<input type="button" value="-" onclick="delitem(this)" />');
+	return newrow;
+}
+
+function delitem(src){
+    $(src).parent().parent().remove();
+}
+
+function fetchConfig(){
+    var conf = {};
+	var items = [];
+	$("#itemrows tr").each(function(i, n){
+	    var row = $(n);
+	    var item = {};
+		item["长度"] = row.find("[name=ilen]").val();
+        item["标签"] = row.find("[name=ilabel]").val();
+		item["类型"] = row.find("[name=itype] option:selected").val();   
+		item["大小端"] = row.find("[name=ibegin] option:selected").val();   
+		item["单位"] = row.find("[name=iunit]").val(); 
+		items.push(item);
+	});
+	conf["数据结构"] = items;
+	return conf;
+}
+
+function checkConf(){
+    var c = fetchConfig();
+	var cr = JSON.parse(window.external.CheckConfig( JSON.stringify(c)));
+	if(cr.err_code == 200){
+	    alert("格式正确，总长度（字节数）：" + cr.total_length);
+	}else{
+	    alert("失败：" + cr.err_msg);
+	}
+}
+
+function saveConf(){
+    var c = fetchConfig();
+	var cr = JSON.parse(window.external.SaveConfig( JSON.stringify(c)));
+	if(cr.err_code == 200){
+	    alert("保存成功！");
+	}else{
+	    alert("失败：" + cr.err_msg);
+	}
+}
+
+</script>
+</head>
+<body>
+        <div style="position:relative; padding:10px;background-color:#7d7df6; border:solid 1px rgb(190,190,190); font-size:16px; font-family:微软雅黑; color:white; ">
+	 <div style="float:right;"><a href="javascript:void(0)" onclick="window.external.Navigate('@Main.html');" style="color:white">数据展示页</a></div>
+	 <div style="text-align:left; color:yellow; font-weight:bold;">数据协议配置</div>
+	</div>
+    <div id="config">
+	   <div id="note" style="padding:10px; color:gray;">
+	   配置保存成功之后，进入“<a href="Main.html">数据展示页</a>”查看实际效果！
+	   </div>
+	   <div style="padding:10px; text-align:center;">
+	      <input type="button" value="检查配置" onclick="checkConf()" />&nbsp;
+		  <input type="button" value="保存配置" onclick="saveConf()" />
+	   </div>
+	   <div>
+	      <table style="width:100%">
+		     <tr><th>长度</th><th>标签</th><th>类型</th><th>大小端</th><th>单位</th><th><input type="button" value="+" onclick="additem()" /></th></tr>
+			 <tbody id="itemrows">
+			 <tr>
+			   <td><input type="text" name="ilen" class="i" /></td><td><input type="text" name="ilabel" class="i" /></td>
+			   <td>
+			     <select name="itype">
+			       <option value="整型">整型</option>
+			       <option value="无符号整型">无符号整型</option>
+			       <option value="浮点型">浮点型</option>
+			       <option value="双精度">双精度</option>
+			       <option value="字符型">字符型</option>
+			       <option value="其它">其它</option>
+			     </select>
+			   </td>
+			   <td>
+			     <select name="ibegin">
+			       <option value="小">小</option>
+			       <option value="大">大</option> 
+			     </select>
+			   </td>
+			   <td><input type="text" name="iunit" class="i" /></td>
+			   <td></td>
+			 </tr>
+			 </tbody>
+		  </table>
+	   </div>
+    </div>
+</body>
+</html>

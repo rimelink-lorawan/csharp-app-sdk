@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>  
+    <style>
+	    body { padding:0; margin:0; }
+        .device { width:50%; float:left; padding-bottom:5px; }
+        .device .inner { margin:5px; border:solid 1px green; padding-bottom:5px; }
+        .device .title { font-weight:bold; padding:5px 5px 0 5px; text-align:center; }
+        .device .time {border-bottom: solid 1px gray; text-align:center; font-size:12px; color:gray;}
+        .device .valuePanle { padding:0px 5px 5px 5px; line-height:30px; }
+        .device .valuePanle .label { display:inline-block; width:30%; }
+        .device .valuePanle .value { display:inline-block; width:60%; color:blue; text-align:center; }
+        .device .down {  width:100px; display:inline-block; text-align:center; height:23px; line-height:23px; cursor : pointer; border:solid 1px gray; color:green; padding:0px 3px; vertical-align:middle; }
+    </style>
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+<script type="text/javascript">
+    function __receive(info) { 
+        var value = eval("(" + info + ")");
+        var items = value.parseResult;
+        
+        var devEUI = value.devEUI;
+        var devName = value.deviceName;
+		
+		if ($("#" + devEUI).length == 0) {
+		    var div = "<div id='" + devEUI + "' class='device'><div class='inner'><div class='title'> " + devName + "<br />[ " + devEUI + " ]</div><div class='detail'></div>";
+		    div += "<div style='text-align:center;'><input type='text' style='width:120px; height:17px; border:solid 1px gray; margin:0; padding:3px 0;vertical-align:middle;' id='p" + devEUI + "' /> <span class='down' onclick='downClick(\"" + devEUI + "\")'>下发文本内容</span></div>";
+			div += "</div></div>";
+            $("#info").append(div);
+        } 
+ 
+        var valueHtml = "<div class='valuePanle'>";
+        valueHtml += "<div class='time'>" + NowTime() + "</div>";
+        for (var p in items.values) {
+            valueHtml += "<div>";
+            valueHtml += "<span class='label'>" + items.values[p].label + "</span>";
+            valueHtml += "<span class='value'>" + items.values[p].value + "</span>";
+            valueHtml += "<span class='unit'>" + items.values[p].unit + "</span>"; 
+            valueHtml += "</div>"; 
+        }        
+        valueHtml += "</div>"; 
+
+        $("#" + devEUI + " .detail").html(valueHtml); 
+    }
+	
+    // 下发数据
+	function downClick(devEUI){
+	   var p = $("#p" + devEUI).val();
+	   window.external.Down(devEUI, "ST:P:" + p);
+	}
+	
+    function NowTime() {
+        var oDate = new Date(),
+        oYear = oDate.getFullYear(),
+        oMonth = oDate.getMonth() + 1 < 10 ? "0" + (oDate.getMonth() + 1) : (oDate.getMonth() + 1);
+        oDay = oDate.getDate() < 10 ? "0" + oDate.getDate() : oDate.getDate();
+        oHour = oDate.getHours() < 10 ? "0" + oDate.getHours() : oDate.getHours();
+        oMinute = oDate.getMinutes() < 10 ? "0" + oDate.getMinutes() : oDate.getMinutes();
+        oSecond = oDate.getSeconds() < 10 ? "0" + oDate.getSeconds() : oDate.getSeconds();
+
+        oTime = oYear + '-' + oMonth + '-' + oDay + " " + oHour + ":" + oMinute + ":" + oSecond;//最后拼接时间
+        return oTime;
+    };
+    </script>
+</head>
+<body>
+    <div style="position:relative; padding:10px;background-color:green; font-size:16px; font-family:微软雅黑; color:white; ">
+	 <div style="float:right;"><a href="javascript:void(0)" onclick="window.external.Navigate('@Config.html');" style="color:white">配置数据协议</a></div>
+	 <div style="text-align:left; color:yellow; font-weight:bold;">采集数据展示面板</div>
+	</div>
+    <div id="info">
+    </div>
+</body>
+</html>

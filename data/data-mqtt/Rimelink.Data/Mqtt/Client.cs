@@ -126,8 +126,17 @@ namespace Rimelink.Data.Mqtt
             {
                 if (_ConnectedDelegate != null) _ConnectedDelegate();
 
-                _MqttClient.Subscribe(new string[] { "application/" + _MqttUsername + "/node/+/rx", "application/" + _MqttUsername + "/device/+/rx" },
-                    new byte[] { MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE });
+                _MqttClient.Subscribe(
+                   new string[] {
+                        "application/" + _MqttUsername + "/node/+/rx",
+                        "application/" + _MqttUsername + "/device/+/rx",
+                        "application/" + _MqttUsername + "/device/+/event/up"
+                   },
+                   new byte[] {
+                        MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE,
+                        MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE,
+                        MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE
+                   });
             }
             else
             {
@@ -139,8 +148,10 @@ namespace Rimelink.Data.Mqtt
         {
             string msg = System.Text.Encoding.Default.GetString(e.Message);
 
-            if (e.Topic.EndsWith("rx"))   // 上行数据消息接收
+            bool isUpEvent = e.Topic.EndsWith("/event/up");
+            if (e.Topic.EndsWith("rx") || isUpEvent)   // 上行数据消息接收
             {
+                version = isUpEvent ? 3 : 0;
                 // 收到数据
                 JObject json = JObject.Parse(msg);  // json 解析 
                 String devEUI = json.Value<String>("devEUI");   // 数据来自终端的devEUI
@@ -241,6 +252,8 @@ namespace Rimelink.Data.Mqtt
             Send(devEUI, data, port, false);
         }
 
+        private int version = 0;
+
         /// <summary>
         /// 发送下行消息
         /// </summary>
@@ -258,8 +271,12 @@ namespace Rimelink.Data.Mqtt
                 downData["fPort"] = port;
                 downData["data"] = Convert.ToBase64String(data);
                 String downJson = downData.ToString(Formatting.None);
-                _MqttClient.Publish("application/" + _MqttUsername + "/node/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
-                _MqttClient.Publish("application/" + _MqttUsername + "/device/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                if (version < 3)
+                {
+                    _MqttClient.Publish("application/" + _MqttUsername + "/node/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                    _MqttClient.Publish("application/" + _MqttUsername + "/device/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                }
+                _MqttClient.Publish("application/" + _MqttUsername + "/device/" + devEUI + "/command/down", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
             }
         }
     }
