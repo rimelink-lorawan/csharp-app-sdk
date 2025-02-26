@@ -24,6 +24,7 @@ namespace Rimelink.Data.Mqtt
 
         // MQTT 服务端及账户信息
         private string _MqttServer;
+        private string _MqttAppId;
         private string _MqttUsername;
         private string _MqttUserpass;
         private string _MqttClientId;
@@ -128,9 +129,9 @@ namespace Rimelink.Data.Mqtt
 
                 _MqttClient.Subscribe(
                    new string[] {
-                        "application/" + _MqttUsername + "/node/+/rx",
-                        "application/" + _MqttUsername + "/device/+/rx",
-                        "application/" + _MqttUsername + "/device/+/event/up"
+                        "application/" + _MqttAppId + "/node/+/rx",
+                        "application/" + _MqttAppId + "/device/+/rx",
+                        "application/" + _MqttAppId + "/device/+/event/up"
                    },
                    new byte[] {
                         MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE,
@@ -178,18 +179,18 @@ namespace Rimelink.Data.Mqtt
             return false;
         } }
 
-        public Client(string server, string appId)
-            : this(server, appId, null)
+        public Client(string broker, string appId, string appAccessKey)
+            : this(broker, appId, appId, appAccessKey)
         {
-
         }
 
-        public Client(string broker, string appId, string appAccessKey)
+        public Client(string broker, string username, string appId, string appAccessKey)
         {
             _MqttServer = broker;
-            _MqttUsername = appId;
+            _MqttAppId = appId;
+            _MqttUsername = username;
             _MqttUserpass = appAccessKey;
-            _MqttClientId = Guid.NewGuid().ToString(); 
+            _MqttClientId = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -266,17 +267,17 @@ namespace Rimelink.Data.Mqtt
             if (IsConnected)
             {
                 JObject downData = new JObject();
-                downData["reference"] = "rimelink";
+                downData["dev_eui"] = devEUI;
                 downData["confirmed"] = confirmed;
                 downData["fPort"] = port;
                 downData["data"] = Convert.ToBase64String(data);
                 String downJson = downData.ToString(Formatting.None);
                 if (version < 3)
                 {
-                    _MqttClient.Publish("application/" + _MqttUsername + "/node/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
-                    _MqttClient.Publish("application/" + _MqttUsername + "/device/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                    _MqttClient.Publish("application/" + _MqttAppId + "/node/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                    _MqttClient.Publish("application/" + _MqttAppId + "/device/" + devEUI + "/tx", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
                 }
-                _MqttClient.Publish("application/" + _MqttUsername + "/device/" + devEUI + "/command/down", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+                _MqttClient.Publish("application/" + _MqttAppId + "/device/" + devEUI + "/command/down", Encoding.UTF8.GetBytes(downJson), MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
             }
         }
     }
